@@ -48,7 +48,7 @@ client.once(Events.ClientReady, async c => {
     }
 
     try {
-      log.log(`announcing: ${message}`)
+      log.log(`announcing to (${guildId}/${channelId}): ${message}`)
       // @ts-ignore
       channel.send(message)
       res.status(200).send({ success: true })
