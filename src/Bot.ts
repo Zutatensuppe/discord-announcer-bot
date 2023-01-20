@@ -16,27 +16,46 @@ client.once(Events.ClientReady, async c => {
 
   const app = express()
   app.post('/announce', express.json(), async (req, res) => {
-    console.log(req.body)
+    log.log(req.body)
     const guildId = req.body.guildId
     const channelId = req.body.channelId
     const message = req.body.message
 
-    const guild = await client.guilds.fetch(guildId)
-    if (!guild) {
-      log.log(`guild not found: ${guildId}`)
-      res.status(404).send({ reason: 'guild not found' })
+    let guild
+    try {
+      guild = await client.guilds.fetch(guildId)
+      if (!guild || !guild.channels) {
+        log.log(`guild not found: ${guildId}`)
+        res.status(404).send({ reason: 'guild not found' })
+        return
+      }
+    } catch (e) {
+      res.status(400).send({ reason: 'bad guildId' })
       return
     }
 
-    const channel = await guild.channels.fetch(channelId)
-    if (!channel) {
-      log.log(`channel not found: ${channelId}`)
-      res.status(404).send({ reason: 'channel not found' })
+    let channel
+    try {
+      channel = await guild.channels.fetch(channelId)
+      if (!channel) {
+        log.log(`channel not found: ${channelId}`)
+        res.status(404).send({ reason: 'channel not found' })
+        return
+      }
+    } catch (e) {
+      res.status(400).send({ reason: 'bad channelId' })
       return
     }
 
-    // @ts-ignore
-    channel.send(message)
+    try {
+      log.log(`announcing: ${message}`)
+      // @ts-ignore
+      channel.send(message)
+      res.status(200).send({ success: true })
+    } catch (e) {
+      log.log(e)
+      res.status(500).send({ reason: 'unknown' })
+    }
   })
 
   app.listen(
